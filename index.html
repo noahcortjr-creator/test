@@ -207,14 +207,16 @@ async function loadPlayer(kpId) {
 
     // Выводим iframe на экран, передавая ему абсолютно все оригинальные параметры
         // Заменяем заблокированное зеркало на официальный и разрешенный домен плеера
+        // Выводим универсальный плеер для фильмов и сериалов
     playerWrap.innerHTML = `
-      <iframe src="https://kinobd.net/player/${kpId}" 
+      <iframe src="https://vidsrc.to/embed/movie/${kpId}" 
               width="100%" 
               height="400px" 
               frameborder="0" 
               referrerpolicy="no-referrer"
               allowfullscreen>
       </iframe>`;
+
 
       
     setStatus("плеер успешно инициализирован и запущен!");
