@@ -173,53 +173,73 @@ async function loadPlayer(kpId) {
       throw new Error("Сервер не нашёл плееры для ID: " + kpId);
     }
 
-    addLog(`Найдено плееров в массиве: ${result.data.length}. Берем первый.`);
-    const playerItem = result.data[0]; // Извлекаем первый плеер
-    
-    const rawIframeStr = playerItem.iframe; 
-    if (!rawIframeStr) {
-      throw new Error("Внутри объекта playerItem отсутствует свойство 'iframe'");
-    }
+    addLog(`Найдено плееров в массиве: ${result.data.length}. Создаем кнопки переключения.`);
 
-    // ИСПОЛЬЗУЕМ КОРРЕКТНЫЙ HTML-ПАРСЕР БРАУЗЕРА ВМЕСТО РЕГУЛЯРОК
-    // Браузер сам уберет все экранирующие слэши \, кавычки и соберет чистый тег
-    const parser = new DOMParser();
-    const cleanHtmlDoc = parser.parseFromString(rawIframeStr.replace(/\\"/g, '"').replace(/\\/g, ''), 'text/html');
-    const iframeElement = cleanHtmlDoc.querySelector('iframe');
+    // Очищаем контейнер перед выводом плееров
+    playerWrap.innerHTML = "";
 
-    if (!iframeElement) {
-      throw new Error("Не удалось преобразовать строку ответа в HTML-элемент iframe");
-    }
+    // Создаем блок для кнопок выбора плеера
+    const tabsContainer = document.createElement("div");
+    tabsContainer.style.cssText = "margin-bottom: 15px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;";
+    playerWrap.appendChild(tabsContainer);
 
-    // Извлекаем ссылку. Если у них используется lazy-load, то адрес будет в data-src, иначе в src
-    let finalVideoUrl = iframeElement.getAttribute('data-src') || iframeElement.getAttribute('src');
+    // Создаем контейнер для самого iframe
+    const iframeContainer = document.createElement("div");
+    iframeContainer.style.cssText = "width: 100%; height: 400px; background: #000;";
+    playerWrap.appendChild(iframeContainer);
 
-    if (!finalVideoUrl) {
-      throw new Error("Внутри iframe не найдены атрибуты src или data-src");
-    }
+    // Перебираем ВСЕ найденные плееры в цикле и создаем для каждого кнопку
+    result.data.forEach((playerItem, index) => {
+      const rawIframeStr = playerItem.iframe;
+      if (!rawIframeStr) return;
 
-    // Если ссылка начинается с сомнительных протоколов или имеет относительный путь, корректируем её
-    if (finalVideoUrl.startsWith('//')) {
-      finalVideoUrl = 'https:' + finalVideoUrl;
-    }
-
-    addLog("Браузер успешно извлек чистую ссылку: " + finalVideoUrl);
-
-    // Выводим iframe на экран, передавая ему абсолютно все оригинальные параметры
-        // Заменяем заблокированное зеркало на официальный и разрешенный домен плеера
-        // Выводим универсальный плеер для фильмов и сериалов
-    playerWrap.innerHTML = `
-      <iframe src="https://vidsrc.to/embed/movie/${kpId}" 
-              width="100%" 
-              height="400px" 
-              frameborder="0" 
-              referrerpolicy="no-referrer"
-              allowfullscreen>
-      </iframe>`;
-
-
+      // Извлекаем чистую ссылку с помощью парсера
+      const parser = new DOMParser();
+      const cleanHtmlDoc = parser.parseFromString(rawIframeStr.replace(/\\"/g, '"').replace(/\\/g, ''), 'text/html');
+      const iframeElement = cleanHtmlDoc.querySelector('iframe');
       
-    setStatus("плеер успешно инициализирован и запущен!");
+      if (iframeElement) {
+        let finalVideoUrl = iframeElement.getAttribute('data-src') || iframeElement.getAttribute('src');
+        if (finalVideoUrl && finalVideoUrl.startsWith('//')) {
+          finalVideoUrl = 'https:' + finalVideoUrl;
+        }
+
+        if (finalVideoUrl) {
+          // Создаем красивую кнопку для каждого балансера
+          const btn = document.createElement("button");
+          btn.textContent = `Плеер ${index + 1}`;
+          btn.style.cssText = "padding: 8px 16px; background: #1a1a26; color: #fff; border: 1px solid #ffb703; border-radius: 6px; cursor: pointer; font-weight: bold;";
+          
+          // При клике на кнопку меняем плеер в iframe
+          btn.onclick = () => {
+            // Сбрасываем стили у всех кнопок и подсвечиваем активную
+            Array.from(tabsContainer.children).forEach(b => b.style.background = "#1a1a26");
+            btn.style.background = "#ffb703";
+            btn.style.color = "#000";
+
+            addLog(`Переключено на Плеер ${index + 1}: ${finalVideoUrl}`);
+            iframeContainer.innerHTML = `
+              <iframe src="${finalVideoUrl}" 
+                      width="100%" 
+                      height="100%" 
+                      frameborder="0" 
+                      referrerpolicy="no-referrer"
+                      allowfullscreen>
+              </iframe>`;
+          };
+
+          tabsContainer.appendChild(btn);
+
+          // Автоматически запускаем самый первый плеер при загрузке
+          if (index === 0) {
+            btn.click();
+          }
+        }
+      }
+    });
+      
+    setStatus("плееры успешно инициализированы и выведены на экран!");
+
 
   } catch (error) {
     console.error(error);
