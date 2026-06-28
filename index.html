@@ -206,14 +206,16 @@ async function loadPlayer(kpId) {
     addLog("Браузер успешно извлек чистую ссылку: " + finalVideoUrl);
 
     // Выводим iframe на экран, передавая ему абсолютно все оригинальные параметры
+        // Заменяем заблокированное зеркало на официальный и разрешенный домен плеера
     playerWrap.innerHTML = `
-      <iframe src="${finalVideoUrl}" 
+      <iframe src="https://kinobd.net/player/${kpId}" 
               width="100%" 
               height="400px" 
               frameborder="0" 
-              referrerpolicy="no-referrer" 
+              referrerpolicy="no-referrer"
               allowfullscreen>
       </iframe>`;
+
       
     setStatus("плеер успешно инициализирован и запущен!");
 
