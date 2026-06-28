@@ -156,6 +156,34 @@ async function searchFilm(query){
 ====================== */
 
   
+async function loadPlayer(kpId) {
+  try {
+    debugConsole.innerHTML = ""; 
+    setStatus("подключаемся к стабильному источнику фильмов...");
+
+    // Используем открытую базу фильмов, которая без проблем работает на GitHub
+    playerWrap.innerHTML = `
+      <iframe src="https://moviesapi.club/movie/${kpId}" 
+              width="100%" 
+              height="400px" 
+              frameborder="0" 
+              sandbox="allow-forms allow-popper-handling allow-same-origin allow-scripts flex-embed-to-popout"
+              allowfullscreen>
+      </iframe>`;
+      
+    addLog(`Плеер успешно подключен для Кинопоиск ID: ${kpId}`);
+    setStatus("плеер успешно инициализирован и запущен!");
+
+  } catch (error) {
+    console.error(error);
+    addLog("КРИТИЧЕСКАЯ ОШИБКА: " + error.message, true);
+    setStatus("ошибка загрузки плеера");
+    playerWrap.innerHTML = `
+      <div style='padding:40px 20px; color:#ff4a4a; text-align:center; font-size:14px; background:#1a1a26; border-radius:12px;'>
+        ❌ Ошибка загрузки видео
+      </div>`;
+  }
+}
 
 
 
